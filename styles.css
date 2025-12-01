@@ -2,21 +2,21 @@
   font-family: "IBM Mono Bold";
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/IBMPlexMono-Bold.ttf) format("truetype");
+  src: url(fonts/IBMPlexMono-Bold.ttf) format("truetype");
 }
 
 @font-face {
   font-family: "Geist Mono";
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/GeistMono-Regular.ttf) format("truetype");
+  src: url(fonts/GeistMono-Regular.ttf) format("truetype");
 }
 
 @font-face {
   font-family: "Geist Mono Bold";
   font-style: normal;
   font-weight: 700;
-  src: url(/fonts/GeistMono-Bold.ttf) format("truetype");
+  src: url(fonts/GeistMono-Bold.ttf) format("truetype");
 }
 
 /* ---------------------------------------------------
