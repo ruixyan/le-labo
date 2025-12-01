@@ -1,0 +1,352 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: 40px;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .controls {
+    position: relative;
+    top: auto;
+    left: auto;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 320px;
+    max-height: 90vh;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+  }
+  .control-group {
+    margin-bottom: 15px;
+  }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #aaa;
+  }
+  input[type="range"] {
+    width: 100%;
+  }
+  input[type="color"] {
+    width: 60px;
+    height: 30px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .perfume-dropdown {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+  }
+  .perfume-dropdown:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .perfume-dropdown:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .perfume-dropdown option {
+    background: #1a1a1a;
+    color: white;
+  }
+  .text-input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    font-size: 12px;
+    transition: all 0.3s;
+    box-sizing: border-box;
+  }
+  .text-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .text-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    display: none;
+  }
+  button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+  }
+  button:hover {
+    background: #357abd;
+    transform: translateY(-1px);
+  }
+  button:disabled {
+    background: #555;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .palette-btn {
+    padding: 8px;
+    margin: 0;
+    font-size: 11px;
+  }
+  .palette-btn.active {
+    background: #4a90e2;
+    border: 2px solid #357abd;
+  }
+  .palette-btn.active:hover {
+    background: #357abd;
+  }
+  .perfume-btn {
+    padding: 8px;
+    margin: 0;
+    font-size: 11px;
+  }
+  .perfume-btn.active {
+    background: #2ecc71;
+    border: 2px solid #27ae60;
+  }
+  .perfume-btn.active:hover {
+    background: #27ae60;
+  }
+  .weather-btn {
+    padding: 10px;
+    margin: 0;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+  }
+  .weather-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .weather-btn.active {
+    background: #4a90e2;
+    border: 2px solid #357abd;
+  }
+  .weather-btn.active:hover {
+    background: #357abd;
+  }
+  .concentration-btn {
+    padding: 10px;
+    margin: 0;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+  }
+  .concentration-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .concentration-btn.active {
+    background: #e74c3c;
+    border: 2px solid #c0392b;
+  }
+  .concentration-btn.active:hover {
+    background: #c0392b;
+  }
+  .emotion-btn {
+    padding: 10px;
+    margin: 0;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+  }
+  .emotion-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .emotion-btn.active {
+    background: #9b59b6;
+    border: 2px solid #8e44ad;
+  }
+  .emotion-btn.active:hover {
+    background: #8e44ad;
+  }
+  .perfume-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border-top: 1px solid #444;
+    padding-top: 10px;
+  }
+  .perfume-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .perfume-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(3px);
+  }
+  .perfume-item.selected {
+    border-left-color: #2ecc71;
+    background: rgba(46, 204, 113, 0.1);
+  }
+  .perfume-name {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+  .perfume-details {
+    font-size: 10px;
+    color: #aaa;
+    text-transform: uppercase;
+  }
+  .loading {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+  }
+  h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .info-display {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .info-display strong {
+    color: #4a90e2;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  #svgOverlay {
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    z-index: 10;
+  }
+  
+  #overlayImage {
+    max-width: 60%;
+    max-height: 60%;
+    object-fit: contain;
+  }
+  
+  .label-container {
+    background-color: rgb(170, 170, 170);
+    width: 900px;
+    height: 600px;
+    display: flex;
+    border: 1px solid #000000;
+    transform: none;
+    z-index: 500;
+    flex-shrink: 0;
+  }
+  
+  .label-space {
+    background-color: rgb(219, 219, 219);
+    border: 1px solid #000000;
+    width: 100px;
+  }
+  
+  .label-center {
+    background-color: rgb(219, 219, 219);
+    width: 900px;
+    height: 600px;
+    border: 1px solid #000000;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  .title-container {
+    height: 100px;
+    border-bottom: 1px solid #000000;
+    padding: 10px;
+    display: flex;
+    gap: 175px;
+  }
+  
+  .user-input-container {
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 12px;
+  }
+  
+  #canvas {
+    width: 100%;
+    flex: 1;
+    display: block;
+  }
+  
+  h1 {
+    font-family: "IBM Mono Bold", sans-serif;
+    font-size: 48px;
+    margin: 0;
+  }
+  
+  
+  h2 {
+    font-family: "Geist Mono", sans-serif;
+    font-size: 15px;
+    margin: 0;
+    padding-left: 2px;
+  }

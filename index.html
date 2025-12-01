@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfume Collection Visualizer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  
+  <div class="controls">
+    <label>Enter Your Name and City</label>
+    <div class="control-group" id="user-input">
+      <!-- <label>Your Name</label> -->
+      <input type="text" id="userName" class="text-input" placeholder="Name">
+      <!-- <label>Your City</label> -->
+      <input type="text" id="userCity" class="text-input" placeholder="City">
+    </div>
+
+    <div class="control-group">
+      <label>Existing Perfumes</label>
+      <select id="perfumeSelect" class="perfume-dropdown">
+        <option value="">-- Select a Perfume --</option>
+        <option value="santal33">Santal 33</option>
+        <option value="another13">Another 13</option>
+        <option value="thématcha26">Thé Matcha 26</option>
+        <option value="thénoir29">Thé Noir 29</option>
+        <option value="rose31">Rose 31</option>
+        <option value="ylang49">Ylang 49</option>
+        <option value="lavande31">Lavande 31</option>
+        <option value="lys41">Lys 41</option>
+        <option value="tonka25">Tonka 25</option>
+        <option value="eucalyptus20">Eucalyptus 20</option>
+      </select>
+    </div>
+
+    <!-- <label>Create Your Own</label> -->
+
+    <div class="control-group">
+      <label>Scent Profile</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button class="palette-btn" data-palette="fresh">Fresh</button>
+        <button class="palette-btn" data-palette="amber">Amber</button>
+        <button class="palette-btn" data-palette="floral">Floral</button>
+        <button class="palette-btn" data-palette="woody">Woody</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Concentration</label>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+        <button class="concentration-btn" data-concentration="quiet">Quiet</button>
+        <button class="concentration-btn" data-concentration="medium">Medium</button>
+        <button class="concentration-btn active" data-concentration="loud">Loud</button>
+      </div>
+    </div>
+    
+    <div class="control-group" style="margin-top: 15px;">
+      <div class="color-grid">
+        <input type="color" id="color1" value="#ff006e">
+        <input type="color" id="color2" value="#8338ec">
+        <input type="color" id="color3" value="#3a86ff">
+        <input type="color" id="color4" value="#06ffa5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Emotion</label>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+        <button class="emotion-btn" data-emotion="melancholy">Melancholy</button>
+        <button class="emotion-btn" data-emotion="bright">Bright</button>
+        <button class="emotion-btn" data-emotion="energetic">Energetic</button>
+        <button class="emotion-btn" data-emotion="calm">Calm</button>
+      </div>
+    </div>
+    
+    
+    <div class="control-group">
+      <label>Weather: <span id="freqVal">0.08</span></label>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+        <button class="weather-btn" data-grain="0.04">☀️ Clear</button>
+        <button class="weather-btn active" data-grain="0.2">☁️ Cloudy</button>
+        <button class="weather-btn" data-grain="0.3">🌧️ Rainy</button>
+      </div>
+    </div>
+  
+    <div class ="control-group">
+      <button id="print">Print Label</button>
+    </div>
+  </div>
+
+
+
+  <div class="label-container">
+    <div class="label-center">
+      <div class="title-container">
+          <div class="title">
+              <h1 id="perfumeName">SANTAL 33</h1>
+              <h2>100 ml e / 3.4 FL.OZ.LIQ.</h2>
+          </div>
+  
+          <div class="user-input-container">
+              <div class="user-input" id="labelledBy">Labelled: <span id="displayCity"></span></div>
+              <div class="user-input" id="on">On: <span id="displayDate"></span></div>
+              <div class="user-input" id="for">For: <span id="displayName"></span></div>
+          </div>
+      </div>
+  
+      <!-- canvas -->
+      <canvas id="canvas"></canvas>
+      
+      <!-- SVG overlay now inside label-center -->
+      <div id="svgOverlay">
+        <img id="overlayImage" src="" alt="">
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="sheets.js"></script>
+
+</body>
+</html>

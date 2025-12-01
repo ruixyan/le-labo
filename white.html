@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Dot Grid</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #f7f7f8;
+    font-family: system-ui, sans-serif;
+  }
+
+  /* slider pinned to top-left */
+  .controls {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .palette-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .palette-buttons button {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: none;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .palette-buttons button.active {
+    background: black;
+    color: white;
+  }
+
+  /* fixed grid container */
+  #grid {
+    width: 800px;
+    height: 400px;
+    margin: 0 auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    display: grid;
+    gap: 12px;
+  }
+
+  .dot {
+    border-radius:50%;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+
+  .cell {
+    position: relative;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="controls">
+
+  <!-- palette buttons -->
+  <div class="palette-buttons">
+    <button id="floralBtn" class="active">floral</button>
+    <button id="woodyBtn">woody</button>
+    <button id="freshBtn">fresh</button>
+    <button id="amberBtn">amber</button>
+  </div>
+
+  <!-- slider -->
+  <label>
+    Rows (max 12):
+    <input type="range" id="sizeSlider" min="6" max="12" value="4">
+  </label>
+
+  <div id="sizeLabel">4 rows → 8 columns</div>
+</div>
+
+<div id="grid"></div>
+
+<script>
+  /* --- COLOR PALETTES --- */
+  const palettes = {
+    floral: ['#B39FED', '#FF8FB7', '#E83C91', '#7A22AB'],
+    woody:  ['#537015', '#9BBC1A', '#F5ECD5', '#92753F'],
+    fresh:  ['#EFECE3','#8FABD4', '#4A70A9', '#1C2055'],
+    amber:  ['#7B542F','#B6771D','#FF9D00','#FFCF71']
+  };
+
+  let currentPalette = palettes.floral;
+
+  const slider = document.getElementById("sizeSlider");
+  const grid = document.getElementById("grid");
+  const label = document.getElementById("sizeLabel");
+
+  const buttons = {
+    floral: document.getElementById("floralBtn"),
+    woody:  document.getElementById("woodyBtn"),
+    fresh:  document.getElementById("freshBtn"),
+    amber:  document.getElementById("amberBtn")
+  };
+
+  /* --- GRID BUILD FUNCTION --- */
+  function buildGrid() {
+    const rows = Number(slider.value);
+    const cols = rows * 2;
+
+    label.textContent = `${rows} rows → ${cols} columns`;
+
+    grid.innerHTML = "";
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+    for (let i = 0; i < rows * cols; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+
+      const dot = document.createElement("div");
+      dot.className = "dot";
+
+      const size = 6 + Math.random() * 30;
+      dot.style.width = size + "px";
+      dot.style.height = size + "px";
+      dot.style.background = currentPalette[Math.floor(Math.random() * currentPalette.length)];
+
+      cell.appendChild(dot);
+      grid.appendChild(cell);
+    }
+  }
+
+  /* --- PALETTE BUTTON LOGIC --- */
+  function setPalette(name) {
+    currentPalette = palettes[name];
+
+    // highlight active button
+    Object.entries(buttons).forEach(([key, btn]) => {
+      btn.classList.toggle("active", key === name);
+    });
+
+    buildGrid(); // regenerate with new colors
+  }
+
+  buttons.floral.onclick = () => setPalette('floral');
+  buttons.woody.onclick  = () => setPalette('woody');
+  buttons.fresh.onclick  = () => setPalette('fresh');
+  buttons.amber.onclick  = () => setPalette('amber');
+
+  slider.addEventListener("input", buildGrid);
+
+  buildGrid();
+</script>
+
+</body>
+</html>

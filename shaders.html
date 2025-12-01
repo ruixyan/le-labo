@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Palette Shader (Working)</title>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+    }
+    #glcanvas {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: block;
+    }
+    .buttons {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    button {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(4px);
+    }
+</style>
+</head>
+<body>
+
+<div class="buttons">
+    <button onclick="setPalette('floral')">floral</button>
+    <button onclick="setPalette('woody')">woody</button>
+    <button onclick="setPalette('fresh')">fresh</button>
+    <button onclick="setPalette('amber')">amber</button>
+</div>
+
+<canvas id="glcanvas"></canvas>
+
+<script>
+// ---------------------------------------------
+// Palettes
+// ---------------------------------------------
+const palettes = {
+    floral: ['#B39FED', '#FF8FB7', '#E83C91', '#7A22AB'],
+    woody:  ['#537015', '#9BBC1A', '#F5ECD5', '#92753F'],
+    fresh:  ['#EFECE3','#8FABD4', '#4A70A9', '#1C2055'],
+    amber:  ['#7B542F','#B6771D','#FF9D00','#FFCF71']
+};
+
+// ---------------------------------------------
+// WebGL Setup
+// ---------------------------------------------
+const canvas = document.getElementById("glcanvas");
+const gl = canvas.getContext("webgl");
+canvas.width = innerWidth/8;
+canvas.height = innerHeight/8;
+
+onresize = () => {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+};
+
+// ---------------------------------------------
+// Vertex Shader
+// ---------------------------------------------
+const vertSrc = `
+attribute vec2 a_position;
+void main() {
+    gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`;
+
+const fragSrc = `
+precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform vec3 u_c0;
+uniform vec3 u_c1;
+uniform vec3 u_c2;
+uniform vec3 u_c3;
+
+// ------------------------------------------------------
+// Random hash
+// ------------------------------------------------------
+float rand(vec2 st){
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+// ------------------------------------------------------
+// Value noise
+// ------------------------------------------------------
+float noise(vec2 st){
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    float a = rand(i);
+    float b = rand(i + vec2(1.0, 0.0));
+    float c = rand(i + vec2(0.0, 1.0));
+    float d = rand(i + vec2(1.0, 1.0));
+
+    vec2 u = f*f*(3.0 - 2.0*f);
+
+    return mix(a,b,u.x) +
+           (c - a)*u.y*(1.0 - u.x) +
+           (d - b)*u.x*u.y;
+}
+
+// ------------------------------------------------------
+// Soft FBM (fewer layers for smooth glow shapes)
+// ------------------------------------------------------
+float fbm(vec2 st){
+    float v = 0.0;
+    float a = 0.6;
+
+    v += a * noise(st);    st *= 2.0; a *= 0.5;
+    v += a * noise(st);    st *= 2.0;
+
+    return v;
+}
+
+// ------------------------------------------------------
+// Palette interpolation
+// ------------------------------------------------------
+vec3 pickColor(float v){
+    float w0 = 1.0 - smoothstep(0.0, 0.33, v);
+    float w1 = smoothstep(0.0, 0.33, v) - smoothstep(0.33, 0.66, v);
+    float w2 = smoothstep(0.33, 0.66, v) - smoothstep(0.66, 1.0, v);
+    float w3 = smoothstep(0.66, 1.0, v);
+
+    return u_c0*w0 + u_c1*w1 + u_c2*w2 + u_c3*w3;
+}
+
+void main(){
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+    st.x *= u_resolution.x / u_resolution.y;
+
+    // Smooth flowing fields
+    float base = fbm(st * 1.5 + u_time * 0.05);
+
+    // ⚡ Very subtle grain (0.03 intensity)
+    float grain = rand(gl_FragCoord.xy + u_time) * 0.03;
+
+    float v = base + grain;
+
+    // ------------------------------------------
+    // Glow shaping
+    // ------------------------------------------
+
+    // brighten midtones (curve)
+    float glowV = pow(v, 0.7);
+
+    // bloom: radial distance glow
+    vec2 centered = st - 0.5;
+    float dist = length(centered);
+    float bloom = exp(-dist * 3.0); // soft radial glow
+
+    // combine pattern + bloom
+    float finalV = mix(glowV, glowV + bloom * 0.3, 0.5);
+
+    // colorize
+    vec3 col = pickColor(finalV);
+
+    // soft color glow boost
+    col = col + col * 0.25 * bloom;
+
+    // final output
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+
+// ---------------------------------------------
+// Compile Shaders
+// ---------------------------------------------
+function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+}
+
+const vert = compile(gl.VERTEX_SHADER, vertSrc);
+const frag = compile(gl.FRAGMENT_SHADER, fragSrc);
+
+const prog = gl.createProgram();
+gl.attachShader(prog, vert);
+gl.attachShader(prog, frag);
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+// ---------------------------------------------
+// Fullscreen Quad
+// ---------------------------------------------
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array([-1,-1, 1,-1, -1,1, 1,1]),
+    gl.STATIC_DRAW
+);
+
+const posLoc = gl.getAttribLocation(prog, "a_position");
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+// ---------------------------------------------
+// Uniforms
+// ---------------------------------------------
+const resLoc = gl.getUniformLocation(prog, "u_resolution");
+const timeLoc = gl.getUniformLocation(prog, "u_time");
+
+const c0Loc = gl.getUniformLocation(prog, "u_c0");
+const c1Loc = gl.getUniformLocation(prog, "u_c1");
+const c2Loc = gl.getUniformLocation(prog, "u_c2");
+const c3Loc = gl.getUniformLocation(prog, "u_c3");
+
+// Upload palette
+function setPalette(name) {
+    let p = palettes[name];
+
+    const toRGB = hex => [
+        parseInt(hex.slice(1,3),16)/255,
+        parseInt(hex.slice(3,5),16)/255,
+        parseInt(hex.slice(5,7),16)/255
+    ];
+
+    gl.uniform3fv(c0Loc, new Float32Array(toRGB(p[0])));
+    gl.uniform3fv(c1Loc, new Float32Array(toRGB(p[1])));
+    gl.uniform3fv(c2Loc, new Float32Array(toRGB(p[2])));
+    gl.uniform3fv(c3Loc, new Float32Array(toRGB(p[3])));
+}
+
+// initial palette
+setPalette("floral");
+
+// ---------------------------------------------
+// Render loop
+// ---------------------------------------------
+function draw(t) {
+    gl.uniform2f(resLoc, canvas.width, canvas.height);
+    gl.uniform1f(timeLoc, t*0.001);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,78 @@
+@font-face {
+    font-family: "IBM Mono Bold";
+    font-style: normal;
+    font-weight: 400;
+    src: url(/fonts/IBMPlexMono-Bold.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    font-style: normal;
+    font-weight: 400;
+    src: url(/fonts/GeistMono-Regular.ttf) format("truetype");
+}
+
+body{
+    background-color: #ffffff;
+    color: #000000;
+    font-family: "Geist Mono", monospace;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.label-container {
+    background-color: rgb(170, 170, 170);
+    width: 900px;
+    height: 600px;
+    display: flex;
+    border: 1px solid #000000;
+    translate: 20%;
+
+}
+
+.label-space {
+    background-color: rgb(219, 219, 219);
+    border: 1px solid #000000;
+    width: 100px;
+}
+
+.label-center {
+    background-color: rgb(219, 219, 219);
+    width: 900px;
+    height: 600px;
+    border: 1px solid #000000;
+}
+
+.title-container {
+    height: 100px;
+    border-bottom: 1px solid #000000;
+    padding: 10px;
+    display: flex;
+    gap: 175px;
+}
+
+.user-input-container {
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 12px;
+}
+
+h1 {
+    font-family: "IBM Mono Bold", sans-serif;
+    font-size: 48px;
+    margin: 0;
+}
+
+
+h2 {
+    font-family: "Geist Mono", sans-serif;
+    font-size: 15px;
+    margin: 0;
+    padding-left: 2px;
+}
+

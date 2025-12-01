@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowy Shader</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    #canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+    .controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 280px;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 30px;
+      border: none;
+      cursor: pointer;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    .palette-btn {
+      padding: 8px;
+      margin: 0;
+      font-size: 11px;
+    }
+    .palette-btn.active {
+      background: #2ecc71;
+    }
+    .palette-btn.active:hover {
+      background: #27ae60;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <div class="controls">
+    <h3 style="margin-top: 0;">Flowy Shader Controls</h3>
+    
+    <div class="control-group">
+      <label>Colors</label>
+      <div class="color-grid">
+        <input type="color" id="color1" value="#ff006e">
+        <input type="color" id="color2" value="#8338ec">
+        <input type="color" id="color3" value="#3a86ff">
+        <input type="color" id="color4" value="#06ffa5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <label>Speed: <span id="speedVal">0.3</span></label>
+      <input type="range" id="speed" min="0" max="2" step="0.1" value="0.3">
+    </div>
+    
+    <div class="control-group">
+      <label>Frequency: <span id="freqVal">1.5</span></label>
+      <input type="range" id="frequency" min="0.5" max="5" step="0.1" value="1.5">
+    </div>
+    
+    <div class="control-group">
+      <label>Noise Strength: <span id="noiseVal">0.7</span></label>
+      <input type="range" id="noiseStrength" min="0" max="1" step="0.05" value="0.7">
+    </div>
+    
+    <div class="control-group">
+      <label>Palettes</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button class="palette-btn" data-palette="fresh">Fresh</button>
+        <button class="palette-btn" data-palette="amber">Amber</button>
+        <button class="palette-btn" data-palette="floral">Floral</button>
+        <button class="palette-btn" data-palette="woody">Woody</button>
+      </div>
+    </div>
+    
+    <button id="randomize">Randomize Colors</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // Shader code
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+
+    const fragmentShader = `
+      uniform float uTime;
+      uniform vec3 uColor1;
+      uniform vec3 uColor2;
+      uniform vec3 uColor3;
+      uniform vec3 uColor4;
+      uniform float uSpeed;
+      uniform float uFrequency;
+      uniform float uNoiseStrength;
+      
+      varying vec2 vUv;
+
+      vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+
+      float snoise(vec2 v){
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                 -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy) );
+        vec2 x0 = v -   i + dot(i, C.xx);
+        vec2 i1;
+        i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod(i, 289.0);
+        vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+        + i.x + vec3(0.0, i1.x, 1.0 ));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+        m = m*m ;
+        m = m*m ;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+        vec3 g;
+        g.x  = a0.x  * x0.x  + h.x  * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+      }
+
+      void main() {
+        vec2 uv = vUv;
+        float time = uTime * uSpeed;
+        
+        // Multiple layered noise for more organic, perfume-like flow
+        float n1 = snoise(uv * uFrequency + vec2(time * 0.15, time * 0.25));
+        float n2 = snoise(uv * (uFrequency * 0.8) - vec2(time * 0.2, time * 0.12));
+        float n3 = snoise(uv * (uFrequency * 1.8) + vec2(time * 0.35, -time * 0.18));
+        float n4 = snoise(uv * (uFrequency * 0.5) + vec2(-time * 0.08, time * 0.22));
+        
+        // Create flowing warp with multiple layers
+        vec2 warpedUv = uv + vec2(n1 * 0.3, n2 * 0.3) * uNoiseStrength;
+        warpedUv += vec2(n3 * 0.15, n4 * 0.15) * uNoiseStrength;
+        
+        // Additional flowing layer
+        float flowNoise = snoise(warpedUv * 1.5 + time * 0.25);
+        
+        // Create ethereal blending
+        float mixVal1 = snoise(warpedUv * 1.8 + time * 0.18);
+        float mixVal2 = snoise(warpedUv * 2.2 - time * 0.15);
+        mixVal1 = mixVal1 * 0.5 + 0.5;
+        mixVal2 = mixVal2 * 0.5 + 0.5;
+        
+        // Softer color transitions for perfume-like quality
+        vec3 colorA = mix(uColor1, uColor2, smoothstep(0.0, 1.0, n1 * 0.5 + 0.5));
+        vec3 colorB = mix(uColor3, uColor4, smoothstep(0.0, 1.0, n2 * 0.5 + 0.5));
+        vec3 colorC = mix(uColor2, uColor3, smoothstep(0.0, 1.0, flowNoise * 0.5 + 0.5));
+        
+        // Triple blend for more complexity
+        vec3 blendAB = mix(colorA, colorB, mixVal1);
+        vec3 finalColor = mix(blendAB, colorC, mixVal2 * 0.4);
+        
+        // Subtle vignette for depth
+        vec2 centered = uv - 0.5;
+        float vignette = 1.0 - dot(centered, centered) * 0.8;
+        finalColor *= vignette;
+        
+        // Softer grain for dreamy quality
+        float grain = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+        finalColor += (grain - 0.5) * 0.08;
+        
+        // Slight glow/bloom effect
+        finalColor = pow(finalColor, vec3(0.95));
+
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+
+    // Setup
+    const canvas = document.getElementById('canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Color palettes
+    const palettes = [
+      {
+        id: 'fresh',
+        name: 'Fresh',
+        colors: ['#B0D8EE', '#7DB2FF', '#004FC4', '#000656']
+      },
+      {
+        id: 'amber',
+        name: 'Amber',
+        colors: ['#6A3300', '#B76C00', '#FF9D00', '#FFCF71']
+      },
+      {
+        id: 'floral',
+        name: 'Floral',
+        colors: ['#FFCBBD', '#FF93BA', '#FF3398', '#9C28DD']
+      },
+      {
+        id: 'woody',
+        name: 'Woody',
+        colors: ['#405F00', '#A5CF00', '#E4EBA3', '#805300']
+      }
+    ];
+
+    // Create shader material
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor1: { value: new THREE.Color('#ff006e') },
+        uColor2: { value: new THREE.Color('#8338ec') },
+        uColor3: { value: new THREE.Color('#3a86ff') },
+        uColor4: { value: new THREE.Color('#06ffa5') },
+        uSpeed: { value: 0.3 },
+        uFrequency: { value: 1.5 },
+        uNoiseStrength: { value: 0.7 }
+      },
+      vertexShader,
+      fragmentShader
+    });
+
+    // Create mesh
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Target values for smooth interpolation
+    const targetValues = {
+      color1: new THREE.Color('#ff006e'),
+      color2: new THREE.Color('#8338ec'),
+      color3: new THREE.Color('#3a86ff'),
+      color4: new THREE.Color('#06ffa5'),
+      speed: 0.3,
+      frequency: 1.5,
+      noiseStrength: 0.7
+    };
+
+    // Controls
+    const color1Input = document.getElementById('color1');
+    const color2Input = document.getElementById('color2');
+    const color3Input = document.getElementById('color3');
+    const color4Input = document.getElementById('color4');
+    const speedInput = document.getElementById('speed');
+    const frequencyInput = document.getElementById('frequency');
+    const noiseStrengthInput = document.getElementById('noiseStrength');
+    const randomizeBtn = document.getElementById('randomize');
+
+    color1Input.addEventListener('input', (e) => {
+      targetValues.color1.set(e.target.value);
+    });
+    color2Input.addEventListener('input', (e) => {
+      targetValues.color2.set(e.target.value);
+    });
+    color3Input.addEventListener('input', (e) => {
+      targetValues.color3.set(e.target.value);
+    });
+    color4Input.addEventListener('input', (e) => {
+      targetValues.color4.set(e.target.value);
+    });
+    
+    speedInput.addEventListener('input', (e) => {
+      targetValues.speed = parseFloat(e.target.value);
+      document.getElementById('speedVal').textContent = e.target.value;
+    });
+    
+    frequencyInput.addEventListener('input', (e) => {
+      targetValues.frequency = parseFloat(e.target.value);
+      document.getElementById('freqVal').textContent = e.target.value;
+    });
+    
+    noiseStrengthInput.addEventListener('input', (e) => {
+      targetValues.noiseStrength = parseFloat(e.target.value);
+      document.getElementById('noiseVal').textContent = e.target.value;
+    });
+
+    randomizeBtn.addEventListener('click', () => {
+      const randomColor = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+      
+      const c1 = randomColor();
+      const c2 = randomColor();
+      const c3 = randomColor();
+      const c4 = randomColor();
+      
+      color1Input.value = c1;
+      color2Input.value = c2;
+      color3Input.value = c3;
+      color4Input.value = c4;
+      
+      targetValues.color1.set(c1);
+      targetValues.color2.set(c2);
+      targetValues.color3.set(c3);
+      targetValues.color4.set(c4);
+      
+      // Remove active state from palette buttons
+      document.querySelectorAll('.palette-btn').forEach(btn => btn.classList.remove('active'));
+    });
+
+    // Palette buttons
+    const paletteButtons = document.querySelectorAll('.palette-btn');
+    
+    function applyPalette(palette) {
+      const colors = palette.colors;
+      
+      color1Input.value = colors[0];
+      color2Input.value = colors[1];
+      color3Input.value = colors[2];
+      color4Input.value = colors[3];
+      
+      targetValues.color1.set(colors[0]);
+      targetValues.color2.set(colors[1]);
+      targetValues.color3.set(colors[2]);
+      targetValues.color4.set(colors[3]);
+      
+      // Update active button
+      paletteButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.palette === palette.id);
+      });
+    }
+    
+    paletteButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const paletteId = btn.dataset.palette;
+        const palette = palettes.find(p => p.id === paletteId);
+        if (palette) {
+          applyPalette(palette);
+        }
+      });
+    });
+    
+    // Set default palette on load
+    applyPalette(palettes[0]);
+
+    // Animation loop
+    const clock = new THREE.Clock();
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const delta = clock.getDelta();
+      
+      // Update time
+      material.uniforms.uTime.value += delta;
+      
+      // Smooth interpolation
+      const lerpFactor = 2.0 * delta;
+      const colorLerp = 2.5 * delta;
+      
+      material.uniforms.uSpeed.value = THREE.MathUtils.lerp(
+        material.uniforms.uSpeed.value,
+        targetValues.speed,
+        lerpFactor
+      );
+      
+      material.uniforms.uFrequency.value = THREE.MathUtils.lerp(
+        material.uniforms.uFrequency.value,
+        targetValues.frequency,
+        lerpFactor
+      );
+      
+      material.uniforms.uNoiseStrength.value = THREE.MathUtils.lerp(
+        material.uniforms.uNoiseStrength.value,
+        targetValues.noiseStrength,
+        lerpFactor
+      );
+      
+      material.uniforms.uColor1.value.lerp(targetValues.color1, colorLerp);
+      material.uniforms.uColor2.value.lerp(targetValues.color2, colorLerp);
+      material.uniforms.uColor3.value.lerp(targetValues.color3, colorLerp);
+      material.uniforms.uColor4.value.lerp(targetValues.color4, colorLerp);
+      
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>

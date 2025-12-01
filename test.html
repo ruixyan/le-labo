@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Dot Grid — B/W</title>
+<style>
+  :root{ --bg:#000 }
+  body { margin:0; background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto; }
+  .controls { position:fixed; top:12px; left:12px; z-index:20; display:flex; flex-direction:column; gap:10px; }
+  .row { display:flex; gap:8px; }
+  button { padding:6px 10px; border-radius:8px; border:0; background:#222; color:#fff; box-shadow:0 3px 10px rgba(0,0,0,.4); cursor:pointer; }
+  button.active{ background:#fff; color:#000; }
+  #grid {
+    width:800px; height:400px; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    display:grid; gap:12px; background:transparent;
+  }
+  .cell{ position:relative; }
+  .dot{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; background:#fff; }
+  pre.debug { position:fixed; right:12px; bottom:12px; max-width:30vw; max-height:40vh; overflow:auto; background:#111; color:#fff; padding:8px; border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,.5); font-size:12px; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <div class="row">
+    <button id="diagBtn" class="active">diagonal</button>
+    <button id="stripeBtn">stripes</button>
+    <button id="checkerBtn">checker</button>
+    <button id="bloomBtn">bloom</button>
+    <button id="hgradBtn">h-gradient</button>
+  </div>
+
+  <div class="row">
+    <button id="lightBtn" class="active">light</button>
+    <button id="mediumBtn">medium</button>
+    <button id="strongBtn">strong</button>
+  </div>
+</div>
+
+<div id="grid"></div>
+<pre id="debug" class="debug" style="display:none"></pre>
+
+<script>
+const MIN_SIZE = 5;
+const LOW_MID_SIZE = Math.round(MIN_SIZE + (34 - MIN_SIZE) * 0.33);
+const MID_SIZE     = Math.round(MIN_SIZE + (34 - MIN_SIZE) * 0.66);
+const MAX_SIZE     = 34;
+
+const checkerSizes = [MIN_SIZE, LOW_MID_SIZE, MID_SIZE, MAX_SIZE, MID_SIZE, LOW_MID_SIZE, MIN_SIZE];
+
+const palettes = { mono:["#fff"] };
+
+const densities = {
+  light:  { rows: 6,  cols: 12 },
+  medium: { rows: 9,  cols: 18 },
+  strong: { rows: 12, cols: 24 }
+};
+
+let currentDensityKey = 'light';
+let currentPatternKey = 'diagonal';
+let currentPaletteKey = 'mono';
+
+const grid = document.getElementById('grid');
+const debugEl = document.getElementById('debug');
+
+function rowToLetter(i){ return String.fromCharCode(97 + i); }
+function lerp(a,b,t){ return a + (b-a)*t; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+const patterns = {
+  diagonal:  { light:{}, medium:{}, strong:{} },
+  stripes:   { light:{}, medium:{}, strong:{} },
+  checker:   { light:{}, medium:{}, strong:{} },
+  bloom:     { light:{}, medium:{}, strong:{} },
+  hgradient: { light:{}, medium:{}, strong:{} }
+};
+
+function generatePlaceholders() {
+  Object.entries(densities).forEach(([densityKey, {rows, cols}])=>{
+    const cx = (cols+1)/2;
+    const cy = (rows+1)/2;
+
+    for (let r=0; r<rows; r++){
+      for (let c=1; c<=cols; c++){
+        const name = rowToLetter(r) + c;
+
+        const normRow = r / Math.max(1, rows-1);
+        const normCol = (c-1) / Math.max(1, cols-1);
+        const diag = (r + (c-1)) / (rows + cols - 2);
+
+        const d_val = lerp(MIN_SIZE, MAX_SIZE, diag);
+
+        const bands = 4;
+        let stripe_t = (Math.sin(normCol * Math.PI * bands) + 1) / 2;
+        if (r % 2 === 1) stripe_t = 1 - stripe_t;
+        const s_val = lerp(MIN_SIZE, MAX_SIZE, stripe_t);
+
+        const checkerSizes = [MIN_SIZE, LOW_MID_SIZE, MID_SIZE, MAX_SIZE, MID_SIZE, LOW_MID_SIZE, MIN_SIZE];
+const rowsCenter = (rows - 1) / 2;
+const colsCenter = (cols - 1) / 2;
+
+const distRow = Math.round(Math.abs(r - rowsCenter));
+const distCol = Math.round(Math.abs((c-1) - colsCenter));
+const step = Math.min(distRow, distCol, checkerSizes.length - 1); 
+const check_val = checkerSizes[step];
+
+
+        // Bloom pattern
+        const baseXs = [
+          cols * 0.17,
+          cols * 0.50,
+          cols * 0.83
+        ];
+        const baseTopY    = rows * 0.33;
+        const baseBottomY = rows * 0.67;
+        const extra = 3;
+        const bloomCenters = [];
+
+        for (let i = -extra; i <= extra; i++) {
+          const yTop = Math.round(baseTopY + i);
+          if (yTop >= 0 && yTop < rows) {
+            baseXs.forEach(x => bloomCenters.push({ x, y: yTop }));
+          }
+          const yBottom = Math.round(baseBottomY + i);
+          if (yBottom >= 0 && yBottom < rows) {
+            baseXs.forEach(x => bloomCenters.push({ x, y: yBottom }));
+          }
+        }
+
+        let maxBloom = 0;
+        bloomCenters.forEach(center => {
+          const dx = c - center.x;
+          const dy = r - center.y;
+          const dist = Math.sqrt(dx*dx + dy*dy) / (Math.min(rows, cols) * 0.35);
+          const bloom_t = Math.max(0, 1 - dist);
+          maxBloom = Math.max(maxBloom, bloom_t);
+        });
+
+        const bloom_val = lerp(MIN_SIZE, MAX_SIZE, Math.pow(maxBloom, 2.5));
+        const h_val = lerp(MIN_SIZE, MAX_SIZE, normRow);
+
+        patterns.diagonal[densityKey][name] = Math.round(d_val);
+        patterns.stripes[densityKey][name]  = Math.round(s_val);
+        patterns.checker[densityKey][name]  = check_val;
+        patterns.bloom[densityKey][name]    = Math.round(bloom_val);
+        patterns.hgradient[densityKey][name]= Math.round(h_val);
+      }
+    }
+  });
+}
+
+generatePlaceholders();
+
+function buildGrid(){
+  const { rows, cols } = densities[currentDensityKey];
+  grid.innerHTML = '';
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.style.gridTemplateRows    = `repeat(${rows}, 1fr)`;
+
+  const pal = palettes[currentPaletteKey];
+
+  for (let r=0; r<rows; r++){
+    for (let c=1; c<=cols; c++){
+      const name = rowToLetter(r) + c;
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.dataset.name = name;
+      dot.style.background = '#fff';
+
+      const size = patterns[currentPatternKey][currentDensityKey][name];
+      dot.style.width  = size + 'px';
+      dot.style.height = size + 'px';
+
+      cell.appendChild(dot);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function setActive(buttonMap, key){
+  Object.entries(buttonMap).forEach(([k, btn])=> btn.classList.toggle('active', k === key));
+}
+
+const patternMap = {
+  diagonal: document.getElementById('diagBtn'),
+  stripes:  document.getElementById('stripeBtn'),
+  checker:  document.getElementById('checkerBtn'),
+  bloom:    document.getElementById('bloomBtn'),
+  hgradient:document.getElementById('hgradBtn')
+};
+Object.entries(patternMap).forEach(([k,btn])=>{
+  btn.addEventListener('click', ()=>{
+    currentPatternKey = k;
+    setActive(patternMap, k);
+    buildGrid();
+  });
+});
+
+const densityMap = {
+  light: document.getElementById('lightBtn'),
+  medium: document.getElementById('mediumBtn'),
+  strong: document.getElementById('strongBtn')
+};
+Object.entries(densityMap).forEach(([k,btn])=>{
+  btn.addEventListener('click', ()=>{
+    currentDensityKey = k;
+    setActive(densityMap, k);
+    buildGrid();
+  });
+});
+
+buildGrid();
+</script>
+</body>
+</html>
