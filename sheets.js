@@ -72,7 +72,6 @@ function loadSheetData() {
 loadSheetData();
 
 // Refresh data every 5 seconds
-setInterval(loadSheetData, 5000);
 
 
    // Shader code
@@ -190,7 +189,7 @@ setInterval(loadSheetData, 5000);
    },
    amber: {
      name: 'Amber',
-     colors: ['#6A3300', '#B76C00', '#FF9D00', '#FFCF71']
+     colors: ['#FFBF00', '#FF9F00', '#FF7F00', '#FF5F00']
    },
    floral: {
      name: 'Floral',
@@ -213,7 +212,7 @@ setInterval(loadSheetData, 5000);
      uSpeed: { value: 0.3 },
      uFrequency: { value: 1.5 },
      uNoiseStrength: { value: 0.7 },
-     uGrainStrength: { value: 0.08 }
+     uGrainStrength: { value: 0.3 }
    },
    vertexShader,
    fragmentShader
@@ -232,7 +231,7 @@ setInterval(loadSheetData, 5000);
    speed: 0.3,
    frequency: 1.5,
    noiseStrength: 0.7,
-   grainStrength: 0.08
+   grainStrength: 0.3
  };
 
  // Current state for concentration and emotion
@@ -401,16 +400,6 @@ function updateSVGOverlay(concentration, emotion) {
    targetValues.frequency = 1.0 + (concentration / 5) * 2.0;
    targetValues.noiseStrength = 0.5 + (intensity / 5) * 0.4;
    
-   // Update UI controls (guarded)
-   const freqValEl = document.getElementById('freqVal');
-   if (freqValEl) freqValEl.textContent = targetValues.grainStrength.toFixed(2);
-   
-   // Update active weather button based on grain strength
-   document.querySelectorAll('.weather-btn').forEach(btn => {
-     const btnGrain = parseFloat(btn.dataset.grain);
-     btn.classList.toggle('active', Math.abs(btnGrain - targetValues.grainStrength) < 0.02);
-   });
-   
    // Display perfume info
    const infoDiv = document.getElementById('currentInfo');
    if (infoDiv) {
@@ -456,20 +445,6 @@ function updateSVGOverlay(concentration, emotion) {
  if (userCityInput) userCityInput.addEventListener('input', (e) => {
    const displayCityEl = document.getElementById('displayCity');
    if (displayCityEl) displayCityEl.textContent = e.target.value;
- });
- 
- // Weather buttons for grain strength
- document.querySelectorAll('.weather-btn').forEach(btn => {
-   btn.addEventListener('click', () => {
-     const grainStrength = parseFloat(btn.dataset.grain);
-     targetValues.grainStrength = grainStrength;
-     const freqValEl = document.getElementById('freqVal');
-     if (freqValEl) freqValEl.textContent = grainStrength.toFixed(2);
-     
-     // Update active state
-     document.querySelectorAll('.weather-btn').forEach(b => b.classList.remove('active'));
-     btn.classList.add('active');
-   });
  });
 
  // Concentration buttons
@@ -549,25 +524,9 @@ function updateSVGOverlay(concentration, emotion) {
    
    // Get weather and set grain strength
    const weather = (perfume['Weather'] || '').toLowerCase();
-   let grainStrength = 0.08; // default to medium grain (cloudy)
-   
-   if (weather === 'clear' || weather === 'sunny') {
-     grainStrength = 0.04; // less grain
-   } else if (weather === 'cloudy') {
-     grainStrength = 0.08; // medium grain
-   } else if (weather === 'rainy' || weather === 'rain') {
-     grainStrength = 0.15; // heavy grain
-   }
+   let grainStrength = 0.3; // constant grain value
    
    targetValues.grainStrength = grainStrength;
-   const freqValEl = document.getElementById('freqVal');
-   if (freqValEl) freqValEl.textContent = grainStrength.toFixed(2);
-   
-   // Update active weather button
-   document.querySelectorAll('.weather-btn').forEach(btn => {
-     const btnGrain = parseFloat(btn.dataset.grain);
-     btn.classList.toggle('active', btnGrain === grainStrength);
-   });
    
    // Apply concentration
    const concentrationRaw = (perfume['Concentration?'] || '').toString();
